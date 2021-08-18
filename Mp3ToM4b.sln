@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31112.23
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mp3ToM4b", "Mp3ToM4b.csproj", "{C22554DB-8CB3-4A92-8A7F-3D51DF4DCE5B}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{C22554DB-8CB3-4A92-8A7F-3D51DF4DCE5B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C22554DB-8CB3-4A92-8A7F-3D51DF4DCE5B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C22554DB-8CB3-4A92-8A7F-3D51DF4DCE5B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C22554DB-8CB3-4A92-8A7F-3D51DF4DCE5B}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {CE97B298-31D2-4D74-8163-A40C2D8580BA}
+	EndGlobalSection
+EndGlobal
