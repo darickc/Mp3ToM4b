@@ -41,22 +41,22 @@
                 </Grid.RowDefinitions>
 
                 <TextBlock Grid.Row="0" Grid.Column="0" Margin="3" Text="Title"></TextBlock>
-                <TextBox  Grid.Row="0" Grid.Column="1" Margin="3" Text="{Binding Book.Value.Title}"></TextBox>
+                <TextBox  Grid.Row="0" Grid.Column="1" Margin="3" Text="{Binding Book.Value.Title, Mode=TwoWay}"></TextBox>
 
                 <TextBlock Grid.Row="1" Grid.Column="0" Margin="3" Text="Author"></TextBlock>
-                <TextBox  Grid.Row="1" Grid.Column="1" Margin="3" Text="{Binding Book.Value.Author}"></TextBox>
+                <TextBox  Grid.Row="1" Grid.Column="1" Margin="3" Text="{Binding Book.Value.Author, Mode=TwoWay}"></TextBox>
 
                 <TextBlock Grid.Row="2" Grid.Column="0" Margin="3" Text="Series"></TextBlock>
-                <TextBox  Grid.Row="2" Grid.Column="1" Margin="3" Text="{Binding Book.Value.Series}"></TextBox>
+                <TextBox  Grid.Row="2" Grid.Column="1" Margin="3" Text="{Binding Book.Value.Series, Mode=TwoWay}"></TextBox>
 
                 <TextBlock Grid.Row="3" Grid.Column="0" Margin="3" Text="Genre"></TextBlock>
-                <TextBox  Grid.Row="3" Grid.Column="1" Margin="3" Text="{Binding Book.Value.Genre}"></TextBox>
+                <TextBox  Grid.Row="3" Grid.Column="1" Margin="3" Text="{Binding Book.Value.Genre, Mode=TwoWay}"></TextBox>
 
                 <TextBlock Grid.Row="4" Grid.Column="0" Margin="3" Text="Book Number"></TextBlock>
-                <TextBox  Grid.Row="4" Grid.Column="1" Margin="3" Text="{Binding Book.Value.BookNumber}"></TextBox>
+                <TextBox  Grid.Row="4" Grid.Column="1" Margin="3" Text="{Binding Book.Value.BookNumber, Mode=TwoWay}"></TextBox>
 
                 <TextBlock Grid.Row="5" Grid.Column="0" Margin="3" Text="Comment"></TextBlock>
-                <TextBox  Grid.Row="5" Grid.Column="1" Margin="3" Text="{Binding Book.Value.Comment}"></TextBox>
+                <TextBox  Grid.Row="5" Grid.Column="1" Margin="3" Text="{Binding Book.Value.Comment, Mode=TwoWay}"></TextBox>
 
                 <Image Grid.Row="6" Grid.ColumnSpan="2" MaxWidth="200" HorizontalAlignment="Center" Source="{Binding Book.Value.Image}"></Image>
                 <Button Grid.Row="7" Grid.ColumnSpan="2" HorizontalAlignment="Center" Margin="3" FontSize="16" Command="{Binding SaveBookCommand}">Save</Button>
