@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
 using System.Runtime.CompilerServices;
@@ -108,6 +109,9 @@ namespace Mp3ToM4b.ViewModels
         public DelegateCommand OpenDirectoryCommand => new(OpenDirectory);
         public DelegateCommand SelectSaveDirectoryCommand => new(SelectSaveDirectory);
         public DelegateCommand SaveBookCommand => new(SaveAudibook);
+        public DelegateCommand RefreshCommand => new(Refresh);
+        public DelegateCommand ImageCommand => new(ChooseImage);
+        public DelegateCommand<object> RemoveChapterCommand => new(o => RemoveChapter((Chapter)o));
 
         public MainViewModel()
         {
@@ -121,7 +125,7 @@ namespace Mp3ToM4b.ViewModels
                 {
                     new(1)
                     {
-                        Chapters = new List<Chapter>
+                        Chapters = new ObservableCollection<Chapter>
                         {
                             new() {Name = "Chapter 1", Time = TimeSpan.FromSeconds(0)},
                             new() {Name = "Chapter 2", Time = TimeSpan.FromMinutes(45)}
@@ -129,7 +133,7 @@ namespace Mp3ToM4b.ViewModels
                     },
                     new(2)
                     {
-                        Chapters = new List<Chapter>
+                        Chapters = new ObservableCollection<Chapter>
                         {
                             new() {Name = "Chapter 1", Time = TimeSpan.FromSeconds(0)},
                             new() {Name = "Chapter 2", Time = TimeSpan.FromMinutes(304)}
@@ -211,6 +215,40 @@ namespace Mp3ToM4b.ViewModels
             await _audiobookService.Save(Book.Value, SaveDirectory);
             Loading = false;
             MessageBox.Show("Creation Complete");
+        }
+
+        private async void Refresh()
+        {
+            IsIndeterminate = true;
+            Loading = true;
+            await Book.ToResult("nothing")
+                .Tap(b=> _audiobookFactory.RefreshMetadata(b));
+            Loading = false;
+        }
+
+        public void RemoveChapter(Chapter c)
+        {
+            Book.ToResult("nothing")
+                .Tap(b =>
+                {
+                    foreach (var part in b.Parts)
+                    {
+                        if (part.Chapters.Contains(c))
+                        {
+                            part.Chapters.Remove(c);
+                            return;
+                        }
+                    }
+                });
+        }
+
+        public void ChooseImage()
+        {
+            var dialog = new VistaOpenFileDialog();
+            if (dialog.ShowDialog() == true)
+            {
+                Book.Value.Image = File.ReadAllBytes(dialog.FileName);
+            }
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;

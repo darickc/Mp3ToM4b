@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Text.RegularExpressions;
 
 namespace Mp3ToM4b.Common
 {
@@ -44,6 +45,21 @@ namespace Mp3ToM4b.Common
         {
             value = value.Replace("'", "'\\''");
             return value;
+        }
+
+        public static string RemoveIllegalCharacters(this string text)
+        {
+            string regexSearch = new string(Path.GetInvalidFileNameChars());
+            Regex r = new Regex($"[{Regex.Escape(regexSearch)}]");
+            text = r.Replace(text, "");
+            return text;
+        }
+        public static string RemoveIllegalCharactersFromPath(this string text)
+        {
+            string regexSearch = new string(Path.GetInvalidPathChars()) + ":?";
+            Regex r = new Regex($"[{Regex.Escape(regexSearch)}]");
+            text = r.Replace(text, "");
+            return text;
         }
     }
 }

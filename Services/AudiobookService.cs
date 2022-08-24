@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -20,10 +22,11 @@ namespace Mp3ToM4b.Services
         public async Task Save(Audiobook book, string directory)
         {
             var di = CreateDirectories(book, directory);
-            var filename = GetFilename(book, di);
+            //var filename = GetFilename(book, di);
+            SaveImage(book, di);
             await SetupEncoder();
             await EncodeFiles(book);
-            await CombineFiles(book, filename);
+            await CombineFiles(book, di);
             //SetMetadataAndChapters(book, filename);
         }
 
@@ -40,25 +43,58 @@ namespace Mp3ToM4b.Services
         {
             var di = new DirectoryInfo(directory);
             SendProgress("Creating Directory");
-            var folderName = book.Author.RemoveInvalidChars();
-            var dir = di.GetDirectories().FirstOrDefault(d => d.Name == folderName);
-            if (dir != null)
+
+            var titleFolder = book.BookNumber > 0 ? $"{book.BookNumber} - {book.Title}" : book.Title;
+            var path = string.IsNullOrEmpty(book.Series)
+                ? Path.Combine(book.Author, titleFolder)
+                : Path.Combine(book.Author, book.Series, titleFolder);
+
+            var folderName = Path.Combine(directory, path.RemoveIllegalCharactersFromPath());
+            if (!Directory.Exists(folderName))
             {
-                return dir;
+                return Directory.CreateDirectory(folderName);
             }
-            return di.CreateSubdirectory(folderName);
+
+            return new DirectoryInfo(folderName);
+
+
+
+            // var folderName = book.Author.RemoveInvalidChars();
+            // var dir = di.GetDirectories().FirstOrDefault(d => d.Name == folderName);
+            // if (dir != null)
+            // {
+            //     return dir;
+            // }
+            // return di.CreateSubdirectory(folderName);
         }
 
-        private string GetFilename(Audiobook book, DirectoryInfo di)
+        private void SaveImage(Audiobook book, DirectoryInfo directory)
         {
-            var filename = book.Series + (!string.IsNullOrEmpty(book.Series) ? " - " : "");
-            if (book.BookNumber.HasValue)
+            if(book.Image == null || book.Image.Length == 0)
+                return;
+            var imageFileName = Path.Combine(directory.FullName, "cover.jpg");
+            if (!File.Exists(imageFileName))
             {
-                filename += $"{book.BookNumber} ";
+                MemoryStream ms = new MemoryStream(book.Image);
+                Image i = Image.FromStream(ms);
+                i.Save(imageFileName, ImageFormat.Jpeg);
             }
+        }
 
-            filename += book.Title;
-            return Path.Combine(di.FullName, filename.RemoveInvalidChars());
+        private string GetFilename(Audiobook book, Part bookpart, DirectoryInfo di, int numberOfParts)
+        {
+            var titleFileName = numberOfParts > 1 ? $"{bookpart.PartNumber} - {book.Title}" : book.Title;
+            return Path.Combine(di.FullName, titleFileName.RemoveIllegalCharacters() + ".m4b");
+
+
+            // var filename = book.Series + (!string.IsNullOrEmpty(book.Series) ? " - " : "");
+            // if (book.BookNumber.HasValue)
+            // {
+            //     filename += $"{book.BookNumber} ";
+            // }
+            //
+            // filename += book.Title;
+            // return Path.Combine(di.FullName, filename.RemoveInvalidChars());
         }
 
         private async Task SetupEncoder()
@@ -96,17 +132,17 @@ namespace Mp3ToM4b.Services
             }
         }
 
-        private async Task CombineFiles(Audiobook book, string filename)
+        private async Task CombineFiles(Audiobook book, DirectoryInfo di)
         {
             foreach (var bookPart in book.Parts)
             {
-                var name = filename;
-                if (book.Parts.Count > 1)
-                {
-                    name += $" Part {bookPart.PartNumber}";
-                }
+                var name = GetFilename(book,bookPart,di, book.Parts.Count);
+                // if (book.Parts.Count > 1)
+                // {
+                //     name += $" Part {bookPart.PartNumber}";
+                // }
 
-                name += ".m4b";
+                // name += ".m4b";
                 if (!File.Exists(name))
                 {
                     var txt = Path.Combine(Path.GetDirectoryName(bookPart.Files.First().Name), "files.txt");

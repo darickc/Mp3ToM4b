@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 
 namespace Mp3ToM4b.Models
 {
@@ -7,7 +8,7 @@ namespace Mp3ToM4b.Models
     {
 
         public int PartNumber { get; }
-        public List<Chapter> Chapters { get; set; } = new();
+        public ObservableCollection<Chapter> Chapters { get; set; } = new();
         public TimeSpan Duration { get; set; } = TimeSpan.FromSeconds(0);
         public List<AudioFile> Files { get; set; } = new();
 

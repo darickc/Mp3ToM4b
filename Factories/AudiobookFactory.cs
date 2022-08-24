@@ -51,7 +51,7 @@ namespace Mp3ToM4b.Factories
                 book.Comment = track.Comment;
             }
 
-            await _metadataService.GetMetadata(book);
+            await RefreshMetadata(book);
         }
 
         private List<AudioFile> LoadFiles(string folder)
@@ -102,6 +102,11 @@ namespace Mp3ToM4b.Factories
                 book.Parts.Add(part);
                 partNum++;
             } while (files.Any());
+        }
+
+        public async Task RefreshMetadata(Audiobook book)
+        {
+            await _metadataService.GetMetadata(book);
         }
     }
 }

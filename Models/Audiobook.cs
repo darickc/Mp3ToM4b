@@ -1,21 +1,113 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using Mp3ToM4b.Annotations;
 
 namespace Mp3ToM4b.Models
 {
-    public class Audiobook
+    public class Audiobook : INotifyPropertyChanged
     {
+        private byte[] _image;
+        private string _title;
+        private string _author;
+        private string _narrators;
+        private string _series;
+        private double? _bookNumber;
+        private string _genre;
+        private string _comment;
         public List<AudioFile> Files { get; set; }
-        public string Title { get; set; }
-        public string Author { get; set; }
-        public string Narrators { get; set; }
-        public string Series { get; set; }
-        public double? BookNumber { get; set; }
-        public string Genre { get; set; }
-        public string Comment { get; set; }
+
+        public string Title
+        {
+            get => _title;
+            set
+            {
+                if (value == _title) return;
+                _title = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public string Author
+        {
+            get => _author;
+            set
+            {
+                if (value == _author) return;
+                _author = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public string Narrators
+        {
+            get => _narrators;
+            set
+            {
+                if (value == _narrators) return;
+                _narrators = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public string Series
+        {
+            get => _series;
+            set
+            {
+                if (value == _series) return;
+                _series = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public double? BookNumber
+        {
+            get => _bookNumber;
+            set
+            {
+                if (Nullable.Equals(value, _bookNumber)) return;
+                _bookNumber = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public string Genre
+        {
+            get => _genre;
+            set
+            {
+                if (value == _genre) return;
+                _genre = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public string Comment
+        {
+            get => _comment;
+            set
+            {
+                if (value == _comment) return;
+                _comment = value;
+                OnPropertyChanged();
+            }
+        }
+
         public TimeSpan Duration { get; set; }
-        public byte[] Image { get; set; }
+
+        public byte[] Image
+        {
+            get => _image;
+            set
+            {
+                if (Equals(value, _image)) return;
+                _image = value;
+                OnPropertyChanged();
+            }
+        }
 
         public List<Chapter> Chapters { get; set; } = new();
 
@@ -66,5 +158,12 @@ namespace Mp3ToM4b.Models
         //         }
         //     }
         // }
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        [NotifyPropertyChangedInvocator]
+        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
     }
 }

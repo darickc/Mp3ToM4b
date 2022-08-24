@@ -59,14 +59,18 @@
                 <TextBox  Grid.Row="5" Grid.Column="1" Margin="3" Text="{Binding Book.Value.Comment, Mode=TwoWay}"></TextBox>
 
                 <Image Grid.Row="6" Grid.ColumnSpan="2" MaxWidth="200" HorizontalAlignment="Center" Source="{Binding Book.Value.Image}"></Image>
-                <Button Grid.Row="7" Grid.ColumnSpan="2" HorizontalAlignment="Center" Margin="3" FontSize="16" Command="{Binding SaveBookCommand}">Save</Button>
+                <StackPanel Grid.Row="7" Grid.ColumnSpan="2"  Orientation="Horizontal">
+                    <Button HorizontalAlignment="Center" Margin="3" FontSize="16" Command="{Binding SaveBookCommand}">Save</Button>
+                    <Button HorizontalAlignment="Center" Margin="3" FontSize="16" Command="{Binding RefreshCommand}">Refresh</Button>
+                    <Button HorizontalAlignment="Center" Margin="3" FontSize="16" Command="{Binding ImageCommand}">Choose Image</Button>
+                </StackPanel>
             </Grid>
             <DockPanel DockPanel.Dock="Bottom" Margin="10" Visibility="{Binding Loading, ConverterParameter=true, Converter={StaticResource BooleanToVisibilityConverter}}">
                 <TextBlock DockPanel.Dock="Bottom" Text="{Binding ProgressDetail}" HorizontalAlignment="Center"></TextBlock>
                 <ProgressBar Height="10" IsIndeterminate="{Binding IsIndeterminate}" Value="{Binding PercentComplete}" />
             </DockPanel>
             <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
-                <ItemsControl DockPanel.Dock="Left"  Visibility="{Binding Book.HasValue, ConverterParameter=true, Converter={StaticResource BooleanToVisibilityConverter}}" ItemsSource="{Binding Book.Value.Parts}" Focusable="False"  >
+                <ItemsControl Name="ItemsControl" DockPanel.Dock="Left"  Visibility="{Binding Book.HasValue, ConverterParameter=true, Converter={StaticResource BooleanToVisibilityConverter}}" ItemsSource="{Binding Book.Value.Parts}" Focusable="False"  >
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
                             <Border>
@@ -85,16 +89,15 @@
                                                 <DataTemplate>
                                                     <Border BorderThickness="0,0,0,2" BorderBrush="#ddd">
                                                         <Grid Margin="0,10" HorizontalAlignment="Stretch">
-                                                            <StackPanel Orientation="Vertical">
-                                                                <TextBlock>
-                                                                    <TextBlock.Text>
-                                                                        <MultiBinding StringFormat="{}{1:g} - {0}">
-                                                                            <Binding Path="Name" />
-                                                                            <Binding Path="Time" />
-                                                                        </MultiBinding>
-                                                                    </TextBlock.Text>
-                                                                </TextBlock>
-                                                            </StackPanel>
+                                                            <TextBlock>
+                                                                <TextBlock.Text>
+                                                                    <MultiBinding StringFormat="{}{1:g} - {0}">
+                                                                        <Binding Path="Name" />
+                                                                        <Binding Path="Time" />
+                                                                    </MultiBinding>
+                                                                </TextBlock.Text>
+                                                            </TextBlock>
+                                                            <Button Content="X" HorizontalAlignment="Right" Margin="3" Command="{Binding ElementName=ItemsControl, Path=DataContext.RemoveChapterCommand}" CommandParameter="{Binding}" />
                                                         </Grid>
                                                     </Border>
                                                 </DataTemplate>
