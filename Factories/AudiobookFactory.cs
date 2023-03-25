@@ -1,14 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Text.Json.Serialization;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.Windows.Controls;
 using System.Xml.Linq;
 using ATL;
 using CSharpFunctionalExtensions;
 using Mp3ToM4b.Common;
 using Mp3ToM4b.Models;
+using Mp3ToM4b.Models.Book;
 using Mp3ToM4b.Services;
 
 namespace Mp3ToM4b.Factories
@@ -26,10 +31,30 @@ namespace Mp3ToM4b.Factories
 
         public async Task<Result<Audiobook>> Create(string folder)
         {
-            return await Result.Try(() => LoadFiles(folder))
-                .Map(files => new Audiobook(files))
-                .Tap(LoadMetadata)
-                .Tap(LoadChapters);
+            var jsonFile = Directory.GetFiles(folder, "*.json").FirstOrDefault(f => Path.GetFileName(f) == "book.json");
+            if (string.IsNullOrEmpty(jsonFile))
+            {
+                return await Result.Try(() => LoadFiles(folder))
+                    .Map(files => new Audiobook(files))
+                    .Tap(LoadMetadata)
+                    .Tap(LoadChapters);
+            }
+            else
+            {
+                Book b = null;
+                return Result.Try(() => File.ReadAllText(jsonFile))
+                    .Map(json => JsonSerializer.Deserialize<Book>(json, new JsonSerializerOptions
+                    {
+                        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+                        PropertyNameCaseInsensitive = true
+                    }))
+                    .Ensure(book=> book != null, "Invalid Json")
+                    .Tap(book=> b=book)
+                    .Map(book => LoadFiles(folder, book))
+                    .Map(files => new Audiobook(files))
+                    .Tap(audiobook => LoadMetadata(audiobook,b, folder))
+                    .Tap(LoadChapters);
+            }
         }
 
         private async Task LoadMetadata(Audiobook book)
@@ -37,7 +62,7 @@ namespace Mp3ToM4b.Factories
             if (book.Files.Any())
             {
                 Track track = new Track(book.Files.First().Name);
-                book.Title = Regex.Replace(track.Title," -? ?Part 0?1", "", RegexOptions.IgnoreCase);
+                book.Title = Regex.Replace(track.Title, " -? ?Part 0?1", "", RegexOptions.IgnoreCase);
 
                 var artists = track.Artist?.Split("/").ToList() ?? new List<string>();
                 book.Author = artists.FirstOrDefault();
@@ -52,6 +77,20 @@ namespace Mp3ToM4b.Factories
             }
 
             await RefreshMetadata(book);
+        }
+
+        private void LoadMetadata(Audiobook audiobook, Book book, string folder)
+        {
+            audiobook.Title = book.Title?.Main;
+            audiobook.Series = book.Title?.Collection;
+            audiobook.Author = book.Creator.FirstOrDefault(c => c.Role == "author")?.Name;
+            audiobook.Comment = book.Description?.Short;
+            var image = Directory.GetFiles(folder, "*.jpg").FirstOrDefault(f => Path.GetFileName(f) == "cover.jpg");
+            if (!string.IsNullOrEmpty(image))
+            {
+                var bitmap = new Bitmap(image);
+                audiobook.Image = bitmap.ResizeImage(250, 250).ImageToByte2();
+            }
         }
 
         private List<AudioFile> LoadFiles(string folder)
@@ -69,11 +108,25 @@ namespace Mp3ToM4b.Factories
             return audioFiles;
         }
 
+        private List<AudioFile> LoadFiles(string folder, Book book)
+        {
+            var files = Directory.GetFiles(folder, "*.mp3").ToList();
+            var audioFiles = new List<AudioFile>();
+            foreach (var spine in book.Spine)
+            {
+                Result.Success(files.FirstOrDefault(f => Path.GetFileName(f) == spine.OriginalPath))
+                    .Ensure(file => !string.IsNullOrEmpty(file), "No file")
+                    .Map(file => _audioFileFactory.Create(book, file, spine.OriginalPath))
+                    .Tap(file => audioFiles.Add(file));
+            }
+            return audioFiles;
+        }
+
         private void LoadChapters(Audiobook book)
         {
-            
+
             var durationLimit = TimeSpan.FromHours(22);
-            var desiredParts =(int) Math.Ceiling(book.Duration.TotalMilliseconds / durationLimit.TotalMilliseconds);
+            var desiredParts = (int)Math.Ceiling(book.Duration.TotalMilliseconds / durationLimit.TotalMilliseconds);
             var desiredDurationLimit = TimeSpan.FromMilliseconds(book.Duration.TotalMilliseconds / desiredParts);
 
             var files = book.Files.ToList();
@@ -97,7 +150,7 @@ namespace Mp3ToM4b.Factories
                         break;
                     }
                 }
-                part.Files.ForEach(f=>files.Remove(f));
+                part.Files.ForEach(f => files.Remove(f));
                 part.UpdateChapters();
                 book.Parts.Add(part);
                 partNum++;
