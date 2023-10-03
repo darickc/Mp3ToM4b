@@ -14,6 +14,7 @@ using Mp3ToM4b.Models;
 using Mp3ToM4b.Services;
 using Ookii.Dialogs.Wpf;
 using Prism.Commands;
+using Settings = ATL.Settings;
 
 namespace Mp3ToM4b.ViewModels
 {
@@ -107,6 +108,7 @@ namespace Mp3ToM4b.ViewModels
         }
 
         public DelegateCommand OpenDirectoryCommand => new(OpenDirectory);
+        public DelegateCommand OpenAudibleFileCommand => new(OpenAudibleFile);
         public DelegateCommand SelectSaveDirectoryCommand => new(SelectSaveDirectory);
         public DelegateCommand SaveBookCommand => new(SaveAudibook);
         public DelegateCommand RefreshCommand => new(Refresh);
@@ -127,16 +129,16 @@ namespace Mp3ToM4b.ViewModels
                     {
                         Chapters = new ObservableCollection<Chapter>
                         {
-                            new() {Name = "Chapter 1", Time = TimeSpan.FromSeconds(0)},
-                            new() {Name = "Chapter 2", Time = TimeSpan.FromMinutes(45)}
+                            new() { Name = "Chapter 1", Time = TimeSpan.FromSeconds(0) },
+                            new() { Name = "Chapter 2", Time = TimeSpan.FromMinutes(45) }
                         }
                     },
                     new(2)
                     {
                         Chapters = new ObservableCollection<Chapter>
                         {
-                            new() {Name = "Chapter 1", Time = TimeSpan.FromSeconds(0)},
-                            new() {Name = "Chapter 2", Time = TimeSpan.FromMinutes(304)}
+                            new() { Name = "Chapter 1", Time = TimeSpan.FromSeconds(0) },
+                            new() { Name = "Chapter 2", Time = TimeSpan.FromMinutes(304) }
                         }
                     }
                 },
@@ -199,7 +201,7 @@ namespace Mp3ToM4b.ViewModels
             ProgressDetail = "Loading Files";
             await _audiobookFactory.Create(Mp3Directory)
                 .Tap(book => Book = book);
-           Loading = false;
+            Loading = false;
         }
 
         private async void SaveAudibook()
@@ -208,10 +210,12 @@ namespace Mp3ToM4b.ViewModels
             {
                 return;
             }
+
             if (string.IsNullOrEmpty(SaveDirectory))
             {
                 SelectSaveDirectory();
             }
+
             await _audiobookService.Save(Book.Value, SaveDirectory);
             Loading = false;
             MessageBox.Show("Creation Complete");
@@ -222,7 +226,7 @@ namespace Mp3ToM4b.ViewModels
             IsIndeterminate = true;
             Loading = true;
             await Book.ToResult("nothing")
-                .Tap(b=> _audiobookFactory.RefreshMetadata(b));
+                .Tap(b => _audiobookFactory.RefreshMetadata(b));
             Loading = false;
         }
 
@@ -251,7 +255,18 @@ namespace Mp3ToM4b.ViewModels
             }
         }
 
-        public event PropertyChangedEventHandler? PropertyChanged;
+        private async void OpenAudibleFile()
+        {
+            var ookiiDialog = new VistaOpenFileDialog();
+            ookiiDialog.Filter = "Audible (*.aax)|*.aax";
+            if (ookiiDialog.ShowDialog() == true)
+            {
+                Mp3Directory = ookiiDialog.FileName;
+                await LoadAudiobook();
+            }
+        }
+
+    public event PropertyChangedEventHandler? PropertyChanged;
 
         [NotifyPropertyChangedInvocator]
         protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)

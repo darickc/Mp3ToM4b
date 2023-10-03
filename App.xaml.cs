@@ -4,6 +4,7 @@ using System.Windows;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Mp3ToM4b.Factories;
+using Mp3ToM4b.Models;
 using Mp3ToM4b.Services;
 using Mp3ToM4b.ViewModels;
 using Mp3ToM4b.Views;
@@ -23,17 +24,22 @@ namespace Mp3ToM4b
         {
             var builder = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
+                .AddUserSecrets(typeof(App).Assembly)
                 .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
             //.AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true, reloadOnChange: true);
 
             Configuration = builder.Build();
+            var settings = new Settings
+            {
+                Key = Configuration["Key"]
+            };
 
             var serviceCollection = new ServiceCollection();
 
             // AppSettings settings = new AppSettings();
             // Configuration.GetSection("AppSettings").Bind(settings);
             // serviceCollection.AddSingleton(settings);
-
+            serviceCollection.AddSingleton(settings);
             ConfigureServices(serviceCollection);
 
             ServiceProvider = serviceCollection.BuildServiceProvider();

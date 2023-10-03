@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
@@ -10,6 +9,7 @@ using Mp3ToM4b.Common;
 using Mp3ToM4b.Models;
 using Xabe.FFmpeg;
 using Xabe.FFmpeg.Downloader;
+using Settings = Mp3ToM4b.Models.Settings;
 
 namespace Mp3ToM4b.Services
 {
@@ -18,6 +18,13 @@ namespace Mp3ToM4b.Services
         private string _currentFile;
         private int _currentFileNumber;
         private int _totalFiles;
+        private readonly Settings _settings;
+
+        public AudiobookService(Settings settings)
+        {
+            _settings = settings;
+        }
+
         public Action<ProgressDetail> OnProgress { get; set; }
         public async Task Save(Audiobook book, string directory)
         {
@@ -25,8 +32,15 @@ namespace Mp3ToM4b.Services
             //var filename = GetFilename(book, di);
             SaveImage(book, di);
             await SetupEncoder();
-            await EncodeFiles(book);
-            await CombineFiles(book, di);
+            if (book.IsAudibleFile)
+            {
+                await SaveAudibleFile(book, di);
+            }
+            else
+            {
+                await EncodeFiles(book);
+                await CombineFiles(book, di);
+            }
             //SetMetadataAndChapters(book, filename);
         }
 
@@ -70,7 +84,7 @@ namespace Mp3ToM4b.Services
 
         private void SaveImage(Audiobook book, DirectoryInfo directory)
         {
-            if(book.Image == null || book.Image.Length == 0)
+            if (book.Image == null || book.Image.Length == 0)
                 return;
             var imageFileName = Path.Combine(directory.FullName, "cover.jpg");
             if (!File.Exists(imageFileName))
@@ -132,11 +146,25 @@ namespace Mp3ToM4b.Services
             }
         }
 
+        private async Task SaveAudibleFile(Audiobook book, DirectoryInfo di)
+        {
+            var name = GetFilename(book, book.Parts.First(), di, book.Parts.Count);
+            var inputFileName = book.Files.First().Name;
+            if (!File.Exists(name))
+            {
+                string arguments = $"-activation_bytes {_settings.Key} -i \"{inputFileName}\" -c copy \"{name}\"";
+                var conversion = FFmpeg.Conversions.New();
+                conversion.OnProgress += Saving_OnProgress;
+                await conversion.Start(arguments);
+            }
+            SetMetadataAndChapters(book, book.Parts.First(), name);
+        }
+
         private async Task CombineFiles(Audiobook book, DirectoryInfo di)
         {
             foreach (var bookPart in book.Parts)
             {
-                var name = GetFilename(book,bookPart,di, book.Parts.Count);
+                var name = GetFilename(book, bookPart, di, book.Parts.Count);
                 // if (book.Parts.Count > 1)
                 // {
                 //     name += $" Part {bookPart.PartNumber}";
@@ -170,6 +198,7 @@ namespace Mp3ToM4b.Services
                 Genre = book.Genre,
                 TrackNumber = bookPart.PartNumber
             };
+
             if (book.Image != null && book.Image.Length > 0)
             {
                 track.EmbeddedPictures.Add(PictureInfo.fromBinaryData(book.Image));
@@ -184,6 +213,7 @@ namespace Mp3ToM4b.Services
                 }).ToList();
             }
 
+
             track.Save();
         }
 
@@ -194,6 +224,11 @@ namespace Mp3ToM4b.Services
         private void Concat_OnProgress(object sender, Xabe.FFmpeg.Events.ConversionProgressEventArgs args)
         {
             SendProgress($"Combining Files: {args.Duration} / {args.TotalLength}", args.Percent);
+        }
+
+        private void Saving_OnProgress(object sender, Xabe.FFmpeg.Events.ConversionProgressEventArgs args)
+        {
+            SendProgress($"Saving Files: {args.Duration} / {args.TotalLength}", args.Percent);
         }
     }
 }

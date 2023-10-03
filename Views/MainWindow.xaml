@@ -17,6 +17,7 @@
     <Grid Margin="10">
         <DockPanel>
             <DockPanel DockPanel.Dock="Top">
+                <Button DockPanel.Dock="right" Margin="3" Command="{Binding OpenAudibleFileCommand}">Convert Audible File</Button>
                 <Button DockPanel.Dock="right" Margin="3" Command="{Binding OpenDirectoryCommand}">Load Directory</Button>
                 <TextBox DockPanel.Dock="Left" Margin="3" Text="{Binding Mp3Directory}" IsReadOnly="True"></TextBox>
             </DockPanel>

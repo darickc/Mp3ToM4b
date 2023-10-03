@@ -31,6 +31,11 @@ namespace Mp3ToM4b.Factories
 
         public async Task<Result<Audiobook>> Create(string folder)
         {
+            if (File.Exists(folder))
+            {
+                return LoadAudibleFile(folder);
+            }
+
             var jsonFile = Directory.GetFiles(folder, "*.json").FirstOrDefault(f => Path.GetFileName(f) == "book.json");
             if (string.IsNullOrEmpty(jsonFile))
             {
@@ -55,6 +60,67 @@ namespace Mp3ToM4b.Factories
                     .Tap(audiobook => LoadMetadata(audiobook,b, folder))
                     .Tap(LoadChapters);
             }
+        }
+
+        private Result<Audiobook> LoadAudibleFile(string file)
+        {
+            return Result.Try(()=> new Track(file))
+                .Map(track =>
+                {
+                    var chapters = GetAudibleChapters(track).Value;
+                    var audioFile = new AudioFile
+                    {
+                        Chapters = chapters,
+                        Duration = TimeSpan.FromMilliseconds(track.DurationMs),
+                        Name = track.Path,
+                        EncodedName = Path.ChangeExtension(track.Path, "m4b")
+                    };
+                    var files = new List<AudioFile>
+                    {
+                        audioFile
+                    };
+                    var book = new Audiobook(files)
+                    {
+                        IsAudibleFile = true,
+                        Title = track.Title,
+                        Author = track.Artist,
+                        Comment = track.Description
+                    };
+
+                    if (track.EmbeddedPictures.Any())
+                    {
+                        book.Image = track.EmbeddedPictures.First().PictureData;
+                    }
+                    var part = new Part(1);
+                    part.AddFile(audioFile);
+                    part.UpdateChapters();
+                    book.Parts.Add(part);
+                    return book;
+                });
+        }
+
+        private Result<List<Chapter>> GetAudibleChapters(Track track)
+        {
+                return Result.Success(Path.ChangeExtension(track.Path, "json")) 
+                    .Ensure(file=> File.Exists(file),"no file")
+                    .Bind(file=> Result.Try(() => File.ReadAllText(file)))
+                    .Map(json => JsonSerializer.Deserialize<List<AudibleChapter>>(json, new JsonSerializerOptions
+                    {
+                        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+                        PropertyNameCaseInsensitive = true
+                    }))
+                    .Map(chapters => chapters.Select(c=> new Chapter
+                    {
+                        Time = TimeSpan.FromMilliseconds(c.Start),
+                        Name = c.Title
+                    }).ToList())
+                    .OnFailureCompensate(_=> track.Chapters.Select(c => new Chapter
+                    {
+                        Name = c.Title,
+                        Filename = track.Path,
+                        Time = TimeSpan.FromMilliseconds(c.StartTime)
+                    }).ToList());
+           
         }
 
         private async Task LoadMetadata(Audiobook book)

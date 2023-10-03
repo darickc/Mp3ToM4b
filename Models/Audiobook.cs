@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using ATL;
 using Mp3ToM4b.Annotations;
 
 namespace Mp3ToM4b.Models
@@ -113,11 +116,52 @@ namespace Mp3ToM4b.Models
 
         public List<Part> Parts { get; set; } = new();
 
+        public bool IsAudibleFile { get; set; }
+
         public Audiobook(List<AudioFile> files)
         {
             Files = files;
             Duration = TimeSpan.FromMilliseconds(Files.Sum(f => f.Duration.TotalMilliseconds));
         }
+
+        // public Audiobook(Track track)
+        // {
+        //     IsAudibleFile = true;
+        //     Chapters = track.Chapters.Select(c => new Chapter
+        //     {
+        //         Name = c.Title,
+        //         Filename = track.Path,
+        //         Time = TimeSpan.FromMilliseconds(c.StartTime)
+        //     }).ToList();
+        //     Duration = TimeSpan.FromMilliseconds(track.DurationMs);
+        //     Files = new List<AudioFile>
+        //     {
+        //         new()
+        //         {
+        //             Chapters =Chapters.ToList(),
+        //             Duration = TimeSpan.FromMilliseconds(track.DurationMs),
+        //             Name = track.Path,
+        //             EncodedName = Path.ChangeExtension(track.Path,"m4b")
+        //         }
+        //     }; 
+        //     Parts = new List<Part>
+        //     {
+        //         new (1)
+        //         {
+        //             Chapters = new ObservableCollection<Chapter>(Chapters),
+        //             Files = Files,
+        //             Duration = Duration
+        //         }
+        //     };
+        //    
+        //     Title = track.Title;
+        //     Author = track.Artist;
+        //     Comment = track.Description;
+        //     if (track.EmbeddedPictures.Any())
+        //     {
+        //         Image = track.EmbeddedPictures.First().PictureData;
+        //     }
+        // }
 
         // public void Split()
         // {
