@@ -200,7 +200,8 @@ namespace Mp3ToM4b.ViewModels
             Loading = true;
             ProgressDetail = "Loading Files";
             await _audiobookFactory.Create(Mp3Directory)
-                .Tap(book => Book = book);
+                .Tap(book => Book = book)
+                .TapError(e=> MessageBox.Show(e));
             Loading = false;
         }
 

@@ -15,6 +15,7 @@ using Mp3ToM4b.Common;
 using Mp3ToM4b.Models;
 using Mp3ToM4b.Models.Book;
 using Mp3ToM4b.Services;
+using Settings = Mp3ToM4b.Models.Settings;
 
 namespace Mp3ToM4b.Factories
 {
@@ -22,11 +23,13 @@ namespace Mp3ToM4b.Factories
     {
         private readonly MetadataService _metadataService;
         private readonly AudioFileFactory _audioFileFactory;
+        private readonly Settings _settings;
 
-        public AudiobookFactory(MetadataService metadataService, AudioFileFactory audioFileFactory)
+        public AudiobookFactory(MetadataService metadataService, AudioFileFactory audioFileFactory, Settings settings)
         {
             _metadataService = metadataService;
             _audioFileFactory = audioFileFactory;
+            _settings = settings;
         }
 
         public async Task<Result<Audiobook>> Create(string folder)
@@ -64,7 +67,9 @@ namespace Mp3ToM4b.Factories
 
         private Result<Audiobook> LoadAudibleFile(string file)
         {
-            return Result.Try(()=> new Track(file))
+            return Result.Success(file)
+                .Ensure(_=> !string.IsNullOrEmpty(_settings.Key), "Key is invalid")
+                .Bind(f=>Result.Try(()=> new Track(f)))
                 .Map(track =>
                 {
                     var chapters = GetAudibleChapters(track).Value;
