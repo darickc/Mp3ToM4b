@@ -110,7 +110,7 @@ namespace Mp3ToM4b.ViewModels
         public DelegateCommand OpenDirectoryCommand => new(OpenDirectory);
         public DelegateCommand OpenAudibleFileCommand => new(OpenAudibleFile);
         public DelegateCommand SelectSaveDirectoryCommand => new(SelectSaveDirectory);
-        public DelegateCommand SaveBookCommand => new(SaveAudibook);
+        public DelegateCommand SaveBookCommand => new(SaveAudiobook);
         public DelegateCommand RefreshCommand => new(Refresh);
         public DelegateCommand ImageCommand => new(ChooseImage);
         public DelegateCommand<object> RemoveChapterCommand => new(o => RemoveChapter((Chapter)o));
@@ -205,7 +205,7 @@ namespace Mp3ToM4b.ViewModels
             Loading = false;
         }
 
-        private async void SaveAudibook()
+        private async void SaveAudiobook()
         {
             if (Book.HasNoValue)
             {
